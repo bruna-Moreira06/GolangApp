@@ -56,3 +56,18 @@ func createCat(req *http.Request) (int, any) {
 	Logger.Infof("Cat '%s' saved into the DB", newCatID)
 	return http.StatusCreated, newCatID
 }
+
+func deleteCat(req *http.Request) (int, any) {
+	catID := req.PathValue("catId")
+	Logger.Info("Deleting the cat: ", catID)
+
+	if _, found := catsDatabase[catID]; found {
+		delete(catsDatabase, catID)
+		Logger.Infof("Cat '%s' deleted from the DB", catID)
+		return http.StatusNoContent, nil
+	} else {
+		Logger.Info("Cat not found for deletion")
+		return http.StatusNotFound, "Cat not found"
+	}
+}
+
