@@ -79,7 +79,7 @@ jobs:
       contents: read
       packages: write
 
-    needs: [versioning]
+    needs: [versioning, unit-tests]
 
     steps:
       - uses: actions/checkout@v4
