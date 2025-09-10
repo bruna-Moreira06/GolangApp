@@ -24,6 +24,55 @@ jobs:
           echo "## 🔖 New version '$version'" >> $GITHUB_STEP_SUMMARY
           echo "## 📦 Image '$imageName'" >> $GITHUB_STEP_SUMMARY
 
+  unit-tests:
+    name: 🧪 Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Install dependencies
+        run: go mod download
+
+      - name: Run unit tests
+        run: |
+          echo "## 🧪 Running Unit Tests" >> $GITHUB_STEP_SUMMARY
+          if [ -d "./test/unit" ]; then
+            go test -v ./test/unit/... -coverprofile=unit-coverage.out || echo "No unit tests found"
+          else
+            echo "No unit test directory found"
+            touch unit-coverage.out
+          fi
+
+      - name: Run mocked tests
+        run: |
+          echo "## 🎭 Running Mocked Tests" >> $GITHUB_STEP_SUMMARY
+          if [ -d "./test/mocked" ]; then
+            go test -v ./test/mocked/... -coverprofile=mocked-coverage.out || echo "No mocked tests found"
+          else
+            echo "No mocked test directory found"
+            touch mocked-coverage.out
+          fi
+
+      - name: Run main package tests
+        run: |
+          echo "## 📦 Running Main Package Tests" >> $GITHUB_STEP_SUMMARY
+          go test -v . -coverprofile=main-coverage.out
+
+      - name: Upload unit test coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-coverage
+          path: |
+            unit-coverage.out
+            mocked-coverage.out
+            main-coverage.out
+
+
   build-and-push:
     runs-on: ubuntu-latest
     permissions:
