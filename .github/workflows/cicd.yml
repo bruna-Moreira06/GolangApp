@@ -26,37 +26,6 @@ jobs:
           echo "## 🔖 New version '$version'" >> $GITHUB_STEP_SUMMARY
           echo "## 📦 Image '$imageName'" >> $GITHUB_STEP_SUMMARY
 
-  update-version:
-    name: 📝 Update version.txt
-    runs-on: ubuntu-latest
-    needs: versioning
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Update version.txt on deploy-dev branch
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-
-          # Switch to deploy-dev branch
-          git checkout deploy-dev
-
-          # Update version.txt with new version
-          echo "${{ needs.versioning.outputs.version }}" > version.txt
-          echo "Updated version.txt with version: ${{ needs.versioning.outputs.version }}"
-
-          # Commit and push changes
-          git add version.txt
-          git commit -m "Update version to ${{ needs.versioning.outputs.version }}" || echo "No changes to commit"
-          git push origin deploy-dev
-
-          echo "## 📝 Updated version.txt on deploy-dev branch" >> $GITHUB_STEP_SUMMARY
-          echo "New version: ${{ needs.versioning.outputs.version }}" >> $GITHUB_STEP_SUMMARY
-
   unit-tests:
     name: 🧪 Unit Tests
     runs-on: ubuntu-latest
@@ -137,3 +106,34 @@ jobs:
       - name: API tests
         run: |
           echo "## 🌐 API tests using ${{needs.versioning.outputs.imageName}}" >> $GITHUB_STEP_SUMMARY
+
+  update-version:
+    name: 📝 Update version.txt
+    runs-on: ubuntu-latest
+    needs: [api-tests, versioning]
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Update version.txt on deploy-dev branch
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Switch to deploy-dev branch
+          git checkout deploy-dev
+
+          # Update version.txt with new version
+          echo "${{ needs.versioning.outputs.version }}" > version.txt
+          echo "Updated version.txt with version: ${{ needs.versioning.outputs.version }}"
+
+          # Commit and push changes
+          git add version.txt
+          git commit -m "Update version to ${{ needs.versioning.outputs.version }}" || echo "No changes to commit"
+          git push origin deploy-dev
+
+          echo "## 📝 Updated version.txt on deploy-dev branch" >> $GITHUB_STEP_SUMMARY
+          echo "New version: ${{ needs.versioning.outputs.version }}" >> $GITHUB_STEP_SUMMARY
