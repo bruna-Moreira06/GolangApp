@@ -59,15 +59,15 @@ func createCat(req *http.Request) (int, any) {
 
 func deleteCat(req *http.Request) (int, any) {
 	catID := req.PathValue("catId")
-	Logger.Info("Deleting the cat: ", catID)
+	Logger.Infof("Deleting the cat: %s", catID)
 
-	if _, found := catsDatabase[catID]; found {
-		delete(catsDatabase, catID)
-		Logger.Infof("Cat '%s' deleted from the DB", catID)
-		return http.StatusNoContent, nil
-	} else {
-		Logger.Info("Cat not found for deletion")
+	_, catExists := catsDatabase[catID]
+	if !catExists {
+		Logger.Infof("Cat '%s' not found in the DB", catID)
 		return http.StatusNotFound, "Cat not found"
 	}
-}
 
+	delete(catsDatabase, catID)
+	Logger.Infof("Cat '%s' deleted from the DB", catID)
+	return http.StatusNoContent, nil
+}

@@ -1,9 +1,13 @@
+//go:build integration
+
 package apitests
 
-import "bytes"
-import "encoding/json"
-import "net/http"
-import "time"
+import (
+	"bytes"
+	"encoding/json"
+	"net/http"
+	"time"
+)
 
 type CatModel struct {
 	Name      string `json:"name"`
@@ -25,10 +29,19 @@ func call(method, path string, reqBody any, code *int, result any) error {
 		return err
 	}
 
-	req, _ := http.NewRequest(method, baseUrl + path,  bytes.NewBuffer(jsonBody))
+	req, err := http.NewRequest(method, baseUrl+path, bytes.NewBuffer(jsonBody))
+	if err != nil {
+		return err
+	}
 
-    // send the request
-    res, err := client.Do(req)
+	// Set appropriate headers
+	if reqBody != nil {
+		req.Header.Set("Content-Type", "application/json")
+	}
+	req.Header.Set("Accept", "application/json")
+
+	// send the request
+	res, err := client.Do(req)
 	if err != nil {
 		return err
 	}
@@ -40,6 +53,8 @@ func call(method, path string, reqBody any, code *int, result any) error {
 
 	if result != nil {
 		err = json.NewDecoder(res.Body).Decode(result)
+		// Don't treat JSON decode errors as fatal for API tests
+		// Sometimes we get plain text responses for error cases
 	}
 
 	return err
